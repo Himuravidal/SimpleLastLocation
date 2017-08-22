@@ -2,59 +2,79 @@ package com.adachersoft.simplelocation;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.icu.text.DateFormat;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
-import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
 
-    private FusedLocationProviderClient mFusedLocationClient;
-    private Location currentLocation;
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
     private static final int RC_GEO = 343;
+
     private TextView latitudeTv;
     private TextView longitudeTv;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    private Location mLastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        permission();
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        buildGoogleApiClient();
+
 
         latitudeTv = (TextView) findViewById(R.id.latitudeTv);
         longitudeTv = (TextView) findViewById(R.id.longitudeTv);
-        Button locationBtn = (Button) findViewById(R.id.locationBtn);
-        Button startLocation = (Button) findViewById(R.id.startLocationBtn);
-        Button stopLocation = (Button) findViewById(R.id.stopLocationBtn);
 
 
-        locationBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                getLastLocation();
-            }
-        });
     }
+
+    private void buildGoogleApiClient() {
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!checkPermissions()) {
+            permission();
+        } else {
+            mGoogleApiClient.connect();
+        }
+
+
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
 
     private void permission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -68,34 +88,67 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void getLastLocation() {
-        mFusedLocationClient.getLastLocation().addOnCompleteListener(this, new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
 
-                if (task.isSuccessful() && task.getResult() != null) {
-                    Location location = task.getResult();
-                    latitudeTv.setText(String.valueOf(location.getLatitude()));
-                    longitudeTv.setText(String.valueOf(location.getLongitude()));
-
-                } else
-                    Toast.makeText(MainActivity.this, "Algo fallo", Toast.LENGTH_SHORT).show();
-
-
-            }
-        });
-
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (RC_GEO == requestCode) {
-            getLastLocation();
+           mGoogleApiClient.connect();
         }
     }
 
 
+    private boolean checkPermissions() {
+        int permissionState = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+        return permissionState == PackageManager.PERMISSION_GRANTED;
+    }
+
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+       // Only last location Know
+
+       /* mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mLastLocation != null) {
+
+            latitudeTv.setText(String.valueOf(mLastLocation.getLatitude()));
+            longitudeTv.setText(String.valueOf(mLastLocation.getLongitude()));
+        }
+        Toast.makeText(this, "No hay location", Toast.LENGTH_SHORT).show();*/
+
+
+
+        // activate the location request and set an interval an accuracy (impact on battery)
+
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(5000);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d("error ","Error conection suspended");
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+        Log.d("Error ","Error conection Failed");
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+            latitudeTv.setText(String.valueOf(location.getLatitude()));
+            longitudeTv.setText(String.valueOf(location.getLongitude()));
+    }
 }
 
 

@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     tools:context="com.adachersoft.simplelocation.MainActivity">
 
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:padding="16dp"
+       android:text="LATITUDE"/>
+
     <TextView
         android:id="@+id/latitudeTv"
         android:layout_width="match_parent"
@@ -13,6 +19,13 @@
         android:paddingBottom="16dp"
         android:padding="16dp"
          />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="LONGITUDE"/>
+
 
     <TextView
         android:id="@+id/longitudeTv"
@@ -23,28 +36,6 @@
        />
 
 
-    <Button
-        android:id="@+id/locationBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="my location"
-        android:padding="16dp"
 
-        />
-
-
-    <Button
-        android:id="@+id/startLocationBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Iniciar location update"
-        android:padding="16dp"/>
-
-    <Button
-        android:id="@+id/stopLocationBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Terminar location update"
-        android:padding="16dp"/>
 
 </LinearLayout>
